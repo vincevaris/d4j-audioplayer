@@ -1,6 +1,8 @@
 # Discord4J AudioPlayer Tutorial
 Requires **version 2.5.0+**
 
+Discord4J: http://austinv11.github.io/Discord4J/
+
 _This tutorial assumes you have a basic understanding of D4J and know how to log into your bot and create listeners._
 
 As of version 2.5.0 for Discord4J, the [AudioChannel](https://jitpack.io/com/github/austinv11/Discord4j/2.5.0/javadoc/sx/blah/discord/handle/AudioChannel.html) method has been deprecated and replaced with the somewhat confusing (yet easy to learn) [AudioPlayer](https://jitpack.io/com/github/austinv11/Discord4j/2.5.0/javadoc/sx/blah/discord/util/audio/AudioPlayer.html). In this tutorial, I will explain the basics of AudioPlayer, such as **Joining voice channels, playing audio from URL and file, and setting volume.** There's more methods you can check out on the [javadocs](https://jitpack.io/com/github/austinv11/Discord4j/2.5.0/javadoc/sx/blah/discord/util/audio/AudioPlayer.html).
