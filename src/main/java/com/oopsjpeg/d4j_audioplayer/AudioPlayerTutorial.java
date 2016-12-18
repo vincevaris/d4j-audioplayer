@@ -34,7 +34,7 @@ public class AudioPlayerTutorial {
 	private static final String PREFIX = "!";
 	private static IDiscordClient client;
 
-	// Stores the channel that
+	// Stores the last channel that the join command was sent from
 	private final Map<IGuild, IChannel> lastChannel = new HashMap<>();
 
 	public static void main(String[] args) throws DiscordException, RateLimitException {
@@ -81,6 +81,12 @@ public class AudioPlayerTutorial {
 				else pause(channel, true);
 			} else if (command.equalsIgnoreCase("skip")) {
 				skip(channel);
+			} else if (command.equalsIgnoreCase("vol") || command.equalsIgnoreCase("volume")) {
+				try {
+					volume(channel, Integer.parseInt(args[0]));
+				} catch (NumberFormatException e) {
+					channel.sendMessage("Invalid volume percentage.");
+				}
 			}
 		}
 	}
@@ -166,6 +172,17 @@ public class AudioPlayerTutorial {
 
 	private void skip(IChannel channel) {
 		getPlayer(channel.getGuild()).skip();
+	}
+
+	private void volume(IChannel channel, int percent) throws RateLimitException, DiscordException, MissingPermissionsException {
+		volume(channel, (float) (percent) / 100);
+	}
+
+	private void volume(IChannel channel, Float vol) throws RateLimitException, DiscordException, MissingPermissionsException {
+		if (vol > 1.5) vol = 1.5f;
+		if (vol < 0) vol = 0f;
+		getPlayer(channel.getGuild()).setVolume(vol);
+		channel.sendMessage("Set volume to **" + (int) (vol * 100) + "%**.");
 	}
 
 	/*
