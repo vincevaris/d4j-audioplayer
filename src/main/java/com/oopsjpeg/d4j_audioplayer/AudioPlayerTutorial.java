@@ -127,7 +127,7 @@ public class AudioPlayerTutorial {
 			IVoiceChannel voice = user.getConnectedVoiceChannels().get(0);
 			if (!voice.getModifiedPermissions(client.getOurUser()).contains(Permissions.VOICE_CONNECT))
 				channel.sendMessage("I can't join that voice channel!");
-			else if (voice.getConnectedUsers().size() >= voice.getUserLimit())
+			else if (voice.getUserLimit() != 0 && voice.getConnectedUsers().size() >= voice.getUserLimit())
 				channel.sendMessage("That room is full!");
 			else {
 				voice.join();
