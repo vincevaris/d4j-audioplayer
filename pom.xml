@@ -8,7 +8,7 @@
     <artifactId>d4j-audioplayer</artifactId>
     <version>1.0.0</version>
 
-    <name>D4J Audio Player Tutorial</name>
+    <name>D4J AudioPlayer Example</name>
     <url>http://github.com/oopsjpeg/d4j-audioplayer/</url>
 
     <properties>
@@ -27,8 +27,7 @@
         <dependency>
             <groupId>com.github.austinv11</groupId>
             <artifactId>Discord4j</artifactId>
-            <version>websocket-rewrite-SNAPSHOT</version>
+            <version>2.10.1</version>
         </dependency>
     </dependencies>
-
 </project>
