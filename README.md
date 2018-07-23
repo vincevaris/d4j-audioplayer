@@ -1,3 +1,4 @@
-# D4J Audio Player Tutorial
+# Discord4J AudioPlayer Example
 
-This tutorial is currently being rewritten!
+This is a basic audio bot using Discord4J.
+Use this as a reference in order to use the AudioPlayer for your own project.
