@@ -3,8 +3,7 @@ package com.oopsjpeg.d4j_audioplayer;
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventSubscriber;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
-import sx.blah.discord.handle.impl.events.ReadyEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.util.MissingPermissionsException;
@@ -24,64 +23,68 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * D4J AudioPlayer Tutorial
+ * D4J AudioPlayer Example
  * http://github.com/oopsjpeg/d4j-audioplayer/
  *
  * @author oopsjpeg
  */
-public class AudioPlayerTutorial {
+public class Example {
+	// The token that the bot will use.
 	private static final String TOKEN = "Insert your bot's token here";
+	// The prefix that the bot will use.
 	private static final String PREFIX = "!";
+
 	private static IDiscordClient client;
 
-	// Stores the last channel that the join command was sent from
+	// Stores the last channel that the join command was sent from.
+	// We do this to send audio-related info to the most relevant channel
+	// ex. audio ends, queue finishes
 	private final Map<IGuild, IChannel> lastChannel = new HashMap<>();
 
 	public static void main(String[] args) throws DiscordException, RateLimitException {
 		System.out.println("Logging bot in...");
 		client = new ClientBuilder().withToken(TOKEN).build();
-		client.getDispatcher().registerListener(new AudioPlayerTutorial());
+		client.getDispatcher().registerListener(new Example());
 		client.login();
-	}
-
-	/*
-	General events
-	 */
-
-	@EventSubscriber
-	public void onReady(ReadyEvent event) {
-		System.out.println("Bot is now ready!");
 	}
 
 	@EventSubscriber
 	public void onMessage(MessageReceivedEvent event) throws RateLimitException, DiscordException, MissingPermissionsException {
 		IMessage message = event.getMessage();
-		IUser user = message.getAuthor();
-		if (user.isBot()) return;
-
 		IChannel channel = message.getChannel();
+		IUser user = message.getAuthor();
 		IGuild guild = message.getGuild();
-		String[] split = message.getContent().split(" ");
+		String content = message.getContent();
 
-		if (split.length >= 1 && split[0].startsWith(PREFIX)) {
-			String command = split[0].replaceFirst(PREFIX, "");
-			String[] args = split.length >= 2 ? Arrays.copyOfRange(split, 1, split.length) : new String[0];
+		// Make sure the message starts with the prefix
+		if (content.startsWith(PREFIX)) {
+			String[] split = content.split(" ");
+			String alias = split[0].replaceFirst(PREFIX, "");
+			String[] args = Arrays.copyOfRange(split, 1, split.length);
 
-			if (command.equalsIgnoreCase("join")) {
-				lastChannel.put(guild, channel);
+			// Update the last audio channel
+			lastChannel.put(guild, channel);
+
+			// `join` - Join the user's current voice channel
+			if (alias.equalsIgnoreCase("join")) {
 				join(channel, user);
-			} else if (command.equalsIgnoreCase("queueurl")) {
+			// `queueurl <url>` - Queue a specified URL
+			} else if (alias.equalsIgnoreCase("queueurl")) {
 				queueUrl(channel, String.join(" ", args));
-			} else if (command.equalsIgnoreCase("queuefile")) {
+			// `queuefile <filename>` - Queue a specified local file by name
+			} else if (alias.equalsIgnoreCase("queuefile")) {
 				queueFile(channel, String.join(" ", args));
-			} else if (command.equalsIgnoreCase("play") || command.equalsIgnoreCase("unpause")) {
-				pause(channel, false);
-			} else if (command.equalsIgnoreCase("pause")) {
-				if (getPlayer(guild).isPaused()) pause(channel, false);
-				else pause(channel, true);
-			} else if (command.equalsIgnoreCase("skip")) {
+			// `resume` - Resume the current audio
+			} else if (alias.equalsIgnoreCase("play") || alias.equalsIgnoreCase("unpause")) {
+				playing(channel, false);
+			// `pause` - Pause/unpause the current audio
+			} else if (alias.equalsIgnoreCase("pause")) {
+				playing(channel, !getPlayer(guild).isPaused());
+			// `skip` - Skip the current audio
+			} else if (alias.equalsIgnoreCase("skip")) {
 				skip(channel);
-			} else if (command.equalsIgnoreCase("vol") || command.equalsIgnoreCase("volume")) {
+			// `vol <volume>` - Sets the volume to a percentage
+			} else if (alias.equalsIgnoreCase("vol") || alias.equalsIgnoreCase("volume")) {
 				try {
 					volume(channel, Integer.parseInt(args[0]));
 				} catch (NumberFormatException e) {
@@ -97,14 +100,14 @@ public class AudioPlayerTutorial {
 
 	@EventSubscriber
 	public void onTrackQueue(TrackQueueEvent event) throws RateLimitException, DiscordException, MissingPermissionsException {
-		IGuild guild = event.getPlayer().getGuild();
-		lastChannel.get(guild).sendMessage("Added **" + getTrackTitle(event.getTrack()) + "** to the playlist.");
+		lastChannel.get(event.getPlayer().getGuild())
+				.sendMessage("Added **" + getTrackTitle(event.getTrack()) + "** to the playlist.");
 	}
 
 	@EventSubscriber
 	public void onTrackStart(TrackStartEvent event) throws RateLimitException, DiscordException, MissingPermissionsException {
-		IGuild guild = event.getPlayer().getGuild();
-		lastChannel.get(guild).sendMessage("Now playing **" + getTrackTitle(event.getTrack()) + "**.");
+		lastChannel.get(event.getPlayer().getGuild())
+				.sendMessage("Now playing **" + getTrackTitle(event.getTrack()) + "**.");
 	}
 
 	@EventSubscriber
@@ -121,10 +124,10 @@ public class AudioPlayerTutorial {
 	 */
 
 	private void join(IChannel channel, IUser user) throws RateLimitException, DiscordException, MissingPermissionsException {
-		if (user.getConnectedVoiceChannels().size() < 1)
+		if (user.getVoiceStates().size() < 1)
 			channel.sendMessage("You aren't in a voice channel!");
 		else {
-			IVoiceChannel voice = user.getConnectedVoiceChannels().get(0);
+			IVoiceChannel voice = user.getVoiceStates().get(0).getChannel();
 			if (!voice.getModifiedPermissions(client.getOurUser()).contains(Permissions.VOICE_CONNECT))
 				channel.sendMessage("I can't join that voice channel!");
 			else if (voice.getUserLimit() != 0 && voice.getConnectedUsers().size() >= voice.getUserLimit())
@@ -166,7 +169,7 @@ public class AudioPlayerTutorial {
 		}
 	}
 
-	private void pause(IChannel channel, boolean pause) {
+	private void playing(IChannel channel, boolean pause) {
 		getPlayer(channel.getGuild()).setPaused(pause);
 	}
 
